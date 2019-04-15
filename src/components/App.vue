@@ -127,6 +127,7 @@ export default {
         this.markers.cites = event;
       }
       this.currentMaker = event;
+      console.log(this.currentMaker)
     },
     changePlace(event) {
       if (this.mapview === "CITES") {

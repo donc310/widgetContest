@@ -12,7 +12,7 @@
     >
       <div v-if="!clustering">
         <GmapMarker
-          v-for="m in activeMarkers"
+          v-for="m in activeMarkers" 
           :position="m.position"
           :opacity="m.opacity"
           :draggable="m.draggable"
@@ -39,20 +39,30 @@
 </template>
 
 <script>
+//import queryString from 'query-string';
 export default {
+  components:{
+    //queryString
+  }
+  ,
   props: {
     markers: { type: Array },
     placeprop: { type: Object },
-    useplaceprop: { type: Boolean }
+    useplaceprop: { type: Boolean },
+    source:{
+      type: String,
+      required: true,
+      default: "http://127.0.0.1:5000/"
+    }
   },
   data() {
     return {
-      mapmarkers: [],
-      lastId: 1,
-      center: { lat: 32.806671, lng: -86.79113 },
-      reportedCenter: { lat: 32.806671, lng: -86.79113 },
+      mapmarkers:this.markers,
+      lastId: 0,
+      center: { lat: 38.58677159688291, lng:-100.54108291233062 },
+      reportedCenter: { lat: 38.58677159688291, lng:-100.54108291233062 },
       clustering: false,
-      zoom: 7,
+      zoom: 4,
       gridSize: 50,
       drag: 0,
       ifw: true,
@@ -141,15 +151,37 @@ export default {
     markerClicked(obj, event) {
       console.log(obj);
       console.log(event);
+    },
+    getLocationStats(statecode,markerID, state){
+      let name = state
+      let query = this.makeQuery(statecode, markerID)
+      fetch(query)
+          .then((resp) => resp.json())
+          .then(data => {
+            let response = data.data
+            display = "STATE:"+ state +'('+ response.state +')'+', Estimated :'+ response.estimated ;
+            console.log(display)
+          })
+          .catch(error => {
+            console.log(error);
+            this.errored = true;
+          })
+      },
+    makeQuery(statecode, markerID){
+      return this.source+'api/getstate?statecode='+statecode+'&mapIndex='+markerID
     }
   },
   watch: {
-    markers: function(newValue, oldValue) {
+    markers: function(newValue, oldValue){
       var update = newValue;
+      this.mapmarkers =[];
+      this.lastId = 0
       update.forEach(marker => {
         const newMarker = this.addMarker();
         newMarker.position.lat = marker[0];
         newMarker.position.lng = marker[1];
+        newMarker.ifw2text =  this.getLocationStats(marker[2],newMarker.id, marker[3])
+
       });
     },
     placeprop: function(newValue, oldValue) {

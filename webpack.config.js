@@ -1,54 +1,54 @@
-const path = require('path')
-const webpack = require('webpack')
+const path = require('path');
+const webpack = require('webpack');
 
 module.exports = {
   entry: './src/main.js',
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'widget.js'
+    filename: 'widget.js',
   },
   resolve: {
     extensions: ['.js', '.vue'],
     alias: {
-      'vue$': 'vue/dist/vue.common.js'
-    }
+      vue$: 'vue/dist/vue.common.js',
+    },
   },
   module: {
     rules: [
       {
         test: /\.vue$/,
-        use: 'vue-loader'
+        use: 'vue-loader',
       },
       {
         test: /\.js$/,
-        use: 'babel-loader'
+        use: 'babel-loader',
       },
       {
-       test: /\.css$/,
+        test: /\.css$/,
         use: [
-        'style-loader',
-        'css-loader'
-        ]
-      }
-    ]
-  }
-}
- 
+          'style-loader',
+          'css-loader',
+        ],
+      },
+    ],
+  },
+};
+
 if (process.env.NODE_ENV === 'production') {
   module.exports.devtool = '#source-map';
   module.exports.plugins = (module.exports.plugins || []).concat([
     new webpack.DefinePlugin({
       'process.env': {
-        NODE_ENV: '"production"'
-      }
+        NODE_ENV: '"production"',
+      },
     }),
     new webpack.optimize.UglifyJsPlugin({
       compress: {
-        warnings: false
-      }
+        warnings: false,
+      },
     }),
     new webpack.LoaderOptionsPlugin({
-      minimize: true
-    })
-  ])
+      minimize: true,
+    }),
+  ]);
 }
