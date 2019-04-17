@@ -1,8 +1,10 @@
 const path = require('path');
 const webpack = require('webpack');
+const Visualizer = require('webpack-visualizer-plugin');
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 module.exports = {
-  entry: './src/main.js',
+  entry: ['babel-polyfill', './src/main.js'],
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'widget.js',
@@ -32,6 +34,10 @@ module.exports = {
       },
     ],
   },
+  plugins: [
+  //new Visualizer({filename: './statistics.html'}),
+  //new BundleAnalyzerPlugin(),
+],
 };
 
 if (process.env.NODE_ENV === 'production') {

@@ -6,10 +6,10 @@
       :invalid-feedback="invalidFeedback"
       :valid-feedback="validFeedback"
       :state="state"
-      description="*Search tittle "
+      description="Choose a name "
     >
     <b-input-group id="WidgetInputname"  size="lg" v-model="name" :state="state" trim >
-        <b-input-group-text slot="append" class="border-top-0 border-right-0 border-left-0" v-b-tooltip.hover title="Some thing description">
+        <b-input-group-text slot="append" class="border-top-0 border-right-0 border-left-0" v-b-tooltip.hover title="Tooltip content">
             <span style="font-size: 20px; color: Dodgerblue;">
 <i class="fas fa-info-circle"></i>            </span>
         </b-input-group-text>

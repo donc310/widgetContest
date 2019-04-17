@@ -4,16 +4,15 @@
       style="width:492px; height:622px;"
       :center="center"
       :zoom="zoom"
-      :options="{styles: mapStyles, scrollwheel: scrollwheel}"
-      @click="mapClicked($event)"
-      @rightclick="mapRclicked($event)"
+      :options="{styles: [], scrollwheel: scrollwheel}"
       @zoom_changed="update('zoom', $event)"
       @center_changed="update('reportedCenter', $event)"
     >
       <div v-if="!clustering">
         <GmapMarker
-          v-for="m in activeMarkers" 
+          v-for="m in mapmarkers"
           :position="m.position"
+          label="★"
           :opacity="m.opacity"
           :draggable="m.draggable"
           @click="markerClicked(m,$event)"
@@ -22,101 +21,49 @@
         >
           <gmap-info-window :opened="m.ifw">{{m.ifw2text}}</gmap-info-window>
         </GmapMarker>
-        <GmapMarker
-          v-if="this.place"
-          label="x"
-          :position="{ lat: this.place.geometry.location.lat(),lng: this.place.geometry.location.lng(),}"
-          @click="markerClicked(this,$event)"
-        >
-          <gmap-info-window :opened="true">
-            <p v-html="this.place.adr_address"></p>
-          </gmap-info-window>
-        </GmapMarker>
         <gmap-info-window :position="reportedCenter" :opened="ifw2">{{ifw2text}}</gmap-info-window>
       </div>
     </GmapMap>
   </div>
 </template>
-
 <script>
-//import queryString from 'query-string';
 export default {
-  components:{
-    //queryString
-  }
-  ,
-  props: {
-    markers: { type: Array },
-    placeprop: { type: Object },
-    useplaceprop: { type: Boolean },
-    source:{
-      type: String,
-      required: true,
-      default: "http://127.0.0.1:5000/"
-    }
-  },
+  components: {},
+  props: {},
   data() {
     return {
-      mapmarkers:this.markers,
+      mapmarkers: [],
       lastId: 0,
-      center: { lat: 38.58677159688291, lng:-100.54108291233062 },
-      reportedCenter: { lat: 38.58677159688291, lng:-100.54108291233062 },
+      center: { lat: 38.58677159688291, lng: -100.54108291233062 },
+      reportedCenter: { lat: 38.58677159688291, lng: -100.54108291233062 },
       clustering: false,
       zoom: 4,
       gridSize: 50,
       drag: 0,
       ifw: true,
-      ifw2: false,
-      ifw2text: "",
-      scrollwheel: true,
-      mapStyle: "normal",
-      place: null,
-      addPlace: false
+      ifw2: true,
+      ifw2text: "Heat Map will be generated here",
+      scrollwheel: true
     };
   },
   methods: {
     updateMapCenter(which, value) {
       this.center = _.clone(this.reportedCenter);
     },
-    mapClicked(mouseArgs) {
-      console.log("map clicked", mouseArgs);
-    },
-    setDescription(description) {
-      this.description = description;
-    },
-    addMarker() {
+    addMarker(marker) {
       this.lastId++;
       this.mapmarkers.push({
         id: this.lastId,
         position: {
-          lat: { type: Number },
-          lng: { type: Number }
+          lat: marker[0],
+          lng: marker[1]
         },
         opacity: 1,
         draggable: false,
         enabled: true,
         ifw: true,
-        ifw2text: "Will display location details"
+        ifw2text: marker[3] + "(" + marker[2] + ")" + marker[4]
       });
-      if (this.mapmarkers[this.mapmarkers.length - 1]) {
-        return this.mapmarkers[this.mapmarkers.length - 1];
-      } else {
-        console.log(this.mapmarkers);
-      }
-    },
-    loopThrough(obj) {
-      var postions = [];
-      for (var key in obj) {
-        if (!obj.hasOwnProperty(key)) continue;
-
-        if (typeof obj[key] !== "object") {
-          console.log(key + " = " + obj[key]);
-          postions.push(obj[key]);
-        } else {
-          loopThrough(obj[key]);
-        }
-      }
-      return postions;
     },
     update(field, event) {
       if (field === "reportedCenter") {
@@ -138,83 +85,20 @@ export default {
         };
       }
     },
-    mapRclicked(mouseArgs) {
-      const createdMarker = this.addMarker();
-      createdMarker.position.lat = mouseArgs.latLng.lat();
-      createdMarker.position.lng = mouseArgs.latLng.lng();
-    },
-    mapclicked(mouseArgs) {
-      const createdMarker = this.addMarker();
-      createdMarker.position.lat = mouseArgs.latLng.lat();
-      createdMarker.position.lng = mouseArgs.latLng.lng();
-    },
-    markerClicked(obj, event) {
-      console.log(obj);
-      console.log(event);
-    },
-    getLocationStats(statecode,markerID, state){
-      let name = state
-      let query = this.makeQuery(statecode, markerID)
-      fetch(query)
-          .then((resp) => resp.json())
-          .then(data => {
-            let response = data.data
-            display = "STATE:"+ state +'('+ response.state +')'+', Estimated :'+ response.estimated ;
-            console.log(display)
-          })
-          .catch(error => {
-            console.log(error);
-            this.errored = true;
-          })
-      },
-    makeQuery(statecode, markerID){
-      return this.source+'api/getstate?statecode='+statecode+'&mapIndex='+markerID
-    }
-  },
-  watch: {
-    markers: function(newValue, oldValue){
+    markerClicked(obj, event) {},
+    updateMap(newValue) {
       var update = newValue;
-      this.mapmarkers =[];
-      this.lastId = 0
+      this.mapmarkers = [];
+      this.lastId = 0;
       update.forEach(marker => {
-        const newMarker = this.addMarker();
-        newMarker.position.lat = marker[0];
-        newMarker.position.lng = marker[1];
-        newMarker.ifw2text =  this.getLocationStats(marker[2],newMarker.id, marker[3])
-
+        this.addMarker(marker);
       });
-    },
-    placeprop: function(newValue, oldValue) {
-      this.place = newValue;
-    },
-    useplaceprop: function(newValue, oldValue) {
-      this.addPlace = newValue;
-      if (this.addPlace && this.place) {
-        const newPlace = this.addMarker();
-        newPlace.position.lat = this.place.geometry.location.lat();
-        newPlace.position.lng = this.place.geometry.location.lng();
-        newPlace.position.ifw2text = this.place.adr_address;
-        this.$emit("widgetplaceadded");
-      }
     }
   },
-  updated() {
-    console.log("map updated");
-  },
-  computed: {
-    mapStyles() {
-      switch (this.mapStyle) {
-        case "normal":
-          return [];
-        case "red":
-          return [];
-        default:
-          return [];
-      }
-    },
-    activeMarkers() {
-      return this.mapmarkers;
-    }
-  }
+  watch: {},
+  updated() {},
+  computed: {},
+  created() {},
+  mounted() {}
 };
 </script>

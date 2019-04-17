@@ -17,9 +17,14 @@
     "url": "https://github.com/kartsims/vue-customelement-bundler.git"
   },
   "devDependencies": {
+    "@babel/plugin-transform-regenerator": "^7.4.3",
     "babel-core": "^6.24.0",
     "babel-loader": "^6.4.1",
+    "babel-plugin-transform-async-to-generator": "^6.24.1",
+    "babel-plugin-transform-runtime": "^6.23.0",
+    "babel-polyfill": "^6.26.0",
     "babel-preset-es2015": "^6.24.0",
+    "babel-preset-stage-0": "^6.24.1",
     "cors": "^2.8.5",
     "cross-env": "^4.0.0",
     "css-loader": "^0.26.4",
@@ -30,6 +35,7 @@
     "rimraf": "^2.6.1",
     "style-loader": "^0.23.1",
     "uglify-js": "git://github.com/mishoo/UglifyJS2.git#harmony",
+    "uglifyjs-webpack-plugin": "^2.1.2",
     "vue": "^2.2.6",
     "vue-custom-element": "^1.0.13",
     "vue-loader": "^11.3.4",
@@ -42,11 +48,15 @@
   "dependencies": {
     "@johmun/vue-tags-input": "^2.0.1",
     "axios": "^0.18.0",
+    "babel-runtime": "^6.26.0",
     "bootstrap": "^4.3.1",
     "bootstrap-vue": "^2.0.0-rc.18",
     "lodash": "^4.17.11",
     "query-string": "^5.1.1",
     "underscore": "^1.9.1",
-    "vue2-google-maps": "^0.10.6"
+    "vue2-google-maps": "^0.10.6",
+    "vuex": "^3.1.0",
+    "webpack-bundle-analyzer": "^3.3.2",
+    "webpack-visualizer-plugin": "^0.1.11"
   }
 }

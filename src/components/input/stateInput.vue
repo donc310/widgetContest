@@ -1,19 +1,27 @@
 <template>
   <div>
-    <br>
     <vue-tags-input
       v-model="tag"
+      placeholder="Enter Locations"
       :tags="tags"
-      :allow-edit-tags="true"
-      :autocomplete-items="items"
-      :add-only-from-autocomplete="true"
-      class="tags-input"
-      placeholder="Enter states"
       @tags-changed="updateTags"
-    ></vue-tags-input>
+      :allow-edit-tags="true"
+      :autocomplete-items="autocompleteItems"
+      :add-only-from-autocomplete="true"
+      class="tags-input border-top-0 border-right-0 border-left-0"
+    >
+      <div
+        slot="tag-left"
+        slot-scope="props"
+        class="my-tag-left"
+        @click="props.performOpenEdit(props.index)"
+      >
+        <i :style="{ color: props.tag.iconColor }" class="material-icons">{{ props.tag.myicon }}</i>
+      </div>
+    </vue-tags-input>
+    <br>
   </div>
 </template>
-
 <script>
 import VueTagsInput from "@johmun/vue-tags-input";
 export default {
@@ -22,66 +30,48 @@ export default {
     VueTagsInput
   },
   props: {
-    name: {
-      type: String,
-      default: "STATE",
-      validator: name => {
-        return name === "STATE";
-      }
-    },
-    source: {
-      type: String,
-      required: true,
-      default: "http://127.0.0.1:5000/api/states"
-    }
+    autocompleteItems: { type: Array, required: true }
   },
   data() {
     return {
       tag: "",
       tags: [],
-      states:[],
       loading: true,
-      errored: false
+      errored: false,
+      debounce: null
     };
   },
   methods: {
-    getTags() {
-      return this.tags;
+    updateTags(event) {
+      this.tags = event;
+      //let postions = this.tags.map(marker => [marker.lat, marker.lng, marker.abv, marker.text, marker.Est], 0);
+      //EventBus.$emit("widgetmarkerchanged", postions);
     },
-    updateTags(event){
-      console.log(event)
-      this.tags = event
-      let postions = this.tags.map(marker => [marker.lat, marker.lng, marker.abv, marker.text], 0);
-      console.log(postions)
-      this.$emit("widgetmarkerchanged", postions, this.name);
+    getStates() {
+      this.loading = true;
+      fetch("http://127.0.0.1:5000/api/states")
+        .then(resp => resp.json())
+        .then(data => {
+          this.autocompleteItems = data.data.map(state => {
+            return {
+              text: state.name,
+              lat: state.latitude,
+              lng: state.longitude,
+              abv: state.abv,
+              Est: state.AudienceTotal
+            };
+          }, 0);
+          this.loading = false;
+        })
+        .catch(error => {
+          console.log(error);
+          this.errored = true;
+        });
     }
   },
-  created(){
-      fetch(this.source)
-      .then((resp) => resp.json())
-      .then(data => {
-        let response = data.data
-        this.states = response.map(state => {
-          return {
-            text: state.name,
-            lat: state.latitude,
-            lng: state.longitude,
-            abv: state.abv
-          };
-        }, 0);
-      })
-      .catch(error => {
-        console.log(error);
-        this.errored = true;
-      })
-  },
-  computed: {
-    items() {
-      return this.states.filter(i => {
-        return i.text.toLowerCase().indexOf(this.tag.toLowerCase()) !== -1;
-      });
-    }
-  }
+  created() {},
+  watch: {},
+  computed: {}
 };
 </script>
 <style lang="css">
