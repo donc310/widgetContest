@@ -5,12 +5,7 @@
     </div>
     <br>
     <div v-if="isLoading" class="d-flex justify-content-center mb-3">
-      <b-spinner
-        variant="primary"
-        style="width: 10rem; height: 10rem;"
-        label="Large Spinner"
-        type="grow"
-      ></b-spinner>
+      <b-spinner variant="primary" label="Large Spinner" type="grow"></b-spinner>
     </div>
     <div v-if=" !errors.length==0">
       <b-alert
@@ -18,8 +13,17 @@
         :key="index"
         show
         dismissible
-        variant="{{e.type}}"
+        :variant="e.type"
+        @dismissed="handleErrorDismis(index)"
       >{{e.message}}</b-alert>
+    </div>
+    <div v-if="isprocessingForm" class="d-flex justify-content-center mb-3">
+      <b-spinner
+        label="Loading..."
+        variant="primary"
+        type="grow"
+        style="width: 2.0rem; height: 2.0rem;"
+      ></b-spinner>
     </div>
     <div v-if="!isLoading">
       <b-row>
@@ -27,11 +31,10 @@
           <div>
             <b-card no-body bg-variant="light">
               <b-tabs v-model="tabIndex" small card pills end>
-                <b-tab title="General" v-if="showForm" @submit="onSubmit" @reset="onReset">
+                <b-tab title="search" v-if="showForm">
                   <div>
-                    <b-form @reset="onReset">
+                    <b-form @submit="onSubmit" @reset="onReset">
                       <hr>
-
                       <b-form-group
                         id="fieldset-1"
                         :key="lg"
@@ -97,10 +100,10 @@
                             size="lg"
                             class="border-top-0 border-right-0 border-left-0 border-bottom-10"
                             v-b-tooltip.hover
-                            title="Tooltip content"
+                            :title="computedLevelOneotoolTip"
                             v-model="audience1"
                           ></b-form-input>
-                          <b-form-datalist id="Level1options" :options="Level1options"></b-form-datalist>
+                          <b-form-datalist id="Level1options" :options="computedLevelOneOptions"></b-form-datalist>
                         </b-form-group>
                         <b-form-group label="Audience Level 2">
                           <b-input-group>
@@ -112,7 +115,13 @@
                               title="Loading..."
                             >
                               <div>
-                                <b-spinner small label="Small Spinner" type="grow" variant="info"></b-spinner>
+                                <b-spinner
+                                  small
+                                  style="width: 1.5rem; height: 1.5rem;"
+                                  label="Small Spinner"
+                                  type="grow"
+                                  variant="info"
+                                ></b-spinner>
                               </div>
                             </b-input-group-text>
                             <b-form-input
@@ -121,7 +130,7 @@
                               size="lg"
                               class="border-top-0 border-right-0 border-left-0 border-bottom-10"
                               v-b-tooltip.hover
-                              title="Tooltip content"
+                              :title="computedLevelTwotoolTip"
                               v-model="audience2"
                             ></b-form-input>
                             <b-form-datalist id="Level2options" :options="Level2options"></b-form-datalist>
@@ -146,7 +155,7 @@
 
                           <b-form-checkbox-group
                             id="frequencies"
-                            v-model="frequency.selected"
+                            v-model="frequencyselected"
                             :options="frequency.frequencyoptions"
                             name="frequencies"
                             class="ml-4"
@@ -158,7 +167,12 @@
                       </div>
                       <div v-if="checked.states">
                         <hr>
-                        <StateInput v-if="!isLoading" :autocompleteItems="computedInitialstates"></StateInput>
+                        <StateInput
+                          v-if="!isLoading"
+                          :_autocompleteItems="computedInitialstates"
+                          :processingForm="isprocessingForm"
+                          @stateTags="StateTags =>form.stateTags = StateTags"
+                        ></StateInput>
                       </div>
                       <div v-if="checked.advancedQuery">
                         <hr>
@@ -170,9 +184,8 @@
                     </b-form>
                   </div>
                 </b-tab>
-                <b-tab title="Edit profile" disabled></b-tab>
-                <b-tab title="Premium Plan" disabled></b-tab>
-                <b-tab title="Info" disabled></b-tab>
+                <b-tab title=" view"></b-tab>
+                <b-tab title="confirm"></b-tab>
               </b-tabs>
             </b-card>
             <br>
@@ -185,7 +198,7 @@
           </div>
         </b-col>
         <b-col class="col-6" v-if="showMap">
-          <GForm></GForm>
+          <GForm :processingForm="isprocessingForm"></GForm>
         </b-col>
       </b-row>
     </div>
@@ -203,6 +216,7 @@ import AdvancedSearch from "./views/Advancedquery.vue";
 import debounce from "lodash/debounce";
 const StateApi = ApiFactory.get("states");
 const LevelsApi = ApiFactory.get("levels");
+const QueryApi = ApiFactory.get("query");
 export default {
   components: {
     StateInput,
@@ -217,44 +231,86 @@ export default {
   data() {
     return {
       errors: [],
-      tabIndex: 1,
+      notifications: [],
+      tabIndex: 0,
       showForm: true,
       showMap: true,
       isLoading: false,
+      isprocessingForm: false,
       checked: {
-        nationwide: false,
+        nationwide: true,
         states: false,
         advancedQuery: false
       },
       isLevel2optionloading: false,
-      frequency: {
+      frequency:{
         frequencyoptions: ["Mild(1-2)", "Moderate(3-4)", "Frequent(+5)"],
-        selected: [],
         allSelected: false,
         indeterminate: false
       },
+      frequencyselected: [],
       form: {
-        name: ""
+        name: "",
+        stateTags: []
       },
       audience1: "",
       audience2: "",
       Level1options: [],
       Level2options: [],
-      initialStates: []
+      initialStates: [],
+      query: []
     };
   },
   methods: {
     next() {
       console.log(tabIndex);
     },
-    onSubmit(evt) {},
+    onSubmit(evt) {
+      evt.preventDefault();
+      if (this.form.name === "") {
+        this.errors.push({
+          type: "danger",
+          message: "The Search Title Field is required"
+        });
+        return;
+      }
+      this.isprocessingForm = true;
+      this.form.Level1 = this.audience1;
+      this.form.Level2 = this.audience2;
+      this.form.frequency = this.frequencyselected;
+      this.form.audience = this.checked.states ? "states" : "nationwide";
+      this.form.enableadvance = this.checked.advancedQuery;
+      var lastquery = this.query.push(this.form) - 1;
+      console.log(this.query[lastquery]);
+      var vm = this;
+      QueryApi.query(this.query[lastquery])
+        .then(function(response) {
+          vm.isprocessingForm = false;
+          vm.tabIndex = 1;
+        })
+        .catch(function(error) {
+          vm.isprocessingForm = false;
+          vm.errors.push({
+            type: "danger",
+            message: " your search wasn'nt successfull "
+          });
+        });
+    },
     onReset(evt) {
       evt.preventDefault();
       this.form.name = "";
       this.show = false;
+      this.audience1 = "";
+      this.audience2 = "";
+      this.checked.nationwide = true;
+      this.checked.advancedQuery = false;
       this.$nextTick(() => {
         this.show = true;
       });
+    },
+    handleErrorDismis(index) {
+      if (!this.errors[index]) return;
+      this.errors.splice(index, 1);
     },
     Handlecheck(name, event) {
       if (name === "state" && event == true) {
@@ -265,41 +321,41 @@ export default {
       }
     },
     toggleAll(checked) {
-      this.frequency.selected = checked
+      this.frequencyselected = checked
         ? this.frequency.frequencyoptions.slice()
         : [];
     },
     initializeapp() {
       this.isLoading = true;
-      var vm = this 
+      var vm = this;
       StateApi.get()
-      .then(function (response) {
-        vm.initialStates = response.data.data;
-        vm.isLoading = false
-      })
-      .catch(function (error) {
-        console.log(error)
-        vm.isLoading = false
-      });     
-      
+        .then(function(response) {
+          vm.initialStates = response.data.data;
+          vm.isLoading = false;
+        })
+        .catch(function(error) {
+          console.log(error);
+          vm.isLoading = false;
+        });
     },
     initOptions() {
       this.isLoading = true;
-      var vm = this 
+      var vm = this;
       LevelsApi.get()
-      .then(function(response){
-        vm.Level1options = response.data.data;
-        vm.isLoading = false
-      })
-      .catch(function(error){
-        console.log(error)
-        vm.isLoading = false
-      });
+        .then(function(response) {
+          vm.Level1options = response.data.data;
+          vm.isLoading = false;
+        })
+        .catch(function(error) {
+          console.log(error);
+          vm.isLoading = false;
+        });
     },
     getLevel2options() {
-      if (this.audience1 in this.Level1options) {
+      if (this.computedCanLoadLevelTwo) {
         var vm = this;
-        fetch(`http://127.0.0.1:5000/api/leveloptions?level=${this.audience1}`)
+        let level = this.audience1.toLocaleLowerCase();
+        fetch(`http://127.0.0.1:5000/api/leveloptions?level=${level}`)
           .then(resp => resp.json())
           .then(data => {
             vm.isLevel2optionloading = false;
@@ -325,8 +381,24 @@ export default {
   },
   watch: {
     audience1: function(newValue, oldValue) {
+      if (newValue === oldValue) {
+        return;
+      }
+      this.audience2 = "";
       this.isLevel2optionloading = true;
       this.debouncedGetLevel2options();
+    },
+    frequencyselected(newVal, oldVal) {
+      if (newVal.length === 0) {
+        this.frequency.indeterminate = false;
+        this.frequency.allSelected = false;
+      } else if (newVal.length === this.frequency.frequencyoptions.length) {
+        this.frequency.indeterminate = false;
+        this.frequency.allSelected = true;
+      } else {
+        this.frequency.indeterminate = true;
+        this.frequency.allSelected = false;
+      }
     }
   },
   created() {
@@ -360,13 +432,24 @@ export default {
         };
       }, 0);
     },
-    computedLevelOneOptions(){
-    	return this.Level1options.map(levelone=>{
+    computedLevelOneOptions() {
+      return this.Level1options.map(levelone => {
         return levelone.Level_1.toUpperCase();
-
-      },0);
+      }, 0);
+    },
+    computedCanLoadLevelTwo() {
+      return this.computedLevelOneOptions.indexOf(this.audience1) != -1;
+    },
+    computedLevelTwotoolTip() {
+      return this.computedCanLoadLevelTwo
+        ? `Optimize your search by selecting a sub level for ${this.audience1.toLocaleLowerCase()} `
+        : " Select Audience main level first ";
+    },
+    computedLevelOneotoolTip() {
+      return this.computedLevelOneOptions.indexOf(this.audience1) != -1
+        ? `Selected  level : ${this.audience1.toLocaleLowerCase()}`
+        : "Select Main audience level..";
     }
-
   }
 };
 </script>

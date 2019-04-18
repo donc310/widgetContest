@@ -21,15 +21,31 @@
         >
           <gmap-info-window :opened="m.ifw">{{m.ifw2text}}</gmap-info-window>
         </GmapMarker>
-        <gmap-info-window :position="reportedCenter" :opened="ifw2">{{ifw2text}}</gmap-info-window>
+        <gmap-info-window :position="reportedCenter" :opened="ifw2">
+          <span v-if="!processingForm">
+          {{ifw2text}}
+          </span>
+          <div  v-if="processingForm" class="d-flex justify-content-center mb-3">
+            <b-spinner
+              small
+              style="width: 2.0rem; height: 2.0rem;"
+              label="Small Spinner"
+              type="grow"
+              variant="info"
+            ></b-spinner>
+          </div>
+        </gmap-info-window>
       </div>
     </GmapMap>
   </div>
 </template>
 <script>
 export default {
-  components: {},
-  props: {},
+  components:{
+  },
+  props:{
+    processingForm:{type:Boolean}
+  },
   data() {
     return {
       mapmarkers: [],
@@ -95,10 +111,12 @@ export default {
       });
     }
   },
-  watch: {},
-  updated() {},
-  computed: {},
-  created() {},
-  mounted() {}
+  watch:{
+
+  },
+  updated(){},
+  computed:{},
+  created(){},
+  mounted(){}
 };
 </script>
