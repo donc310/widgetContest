@@ -1,8 +1,5 @@
 <template>
   <b-container fixed id="Widgetcontainer">
-    <div>
-      <NavBar></NavBar>
-    </div>
     <br>
     <div v-if="isLoading" class="d-flex justify-content-center mb-3">
       <b-spinner variant="primary" label="Large Spinner" type="grow"></b-spinner>
@@ -30,20 +27,19 @@
         <b-col class="col-6">
           <div>
             <b-card no-body bg-variant="light">
-              <b-tabs v-model="tabIndex" small card pills end>
+              <b-tabs v-model="tabIndex" small card pills>
                 <b-tab title="search" v-if="showForm">
                   <div>
                     <b-form @submit="onSubmit" @reset="onReset">
                       <hr>
                       <b-form-group
                         id="fieldset-1"
-                        :key="lg"
                         :invalid-feedback="invalidFeedback"
                         :valid-feedback="validFeedback"
                         :state="namestate"
                         description="*Search tittle "
                       >
-                        <b-input-group id="WidgetInputname" size="lg" :state="namestate" trim>
+                        <b-input-group id="WidgetInputname" :state="namestate" trim>
                           <b-input-group-text
                             slot="append"
                             class="border-top-0 border-right-0 border-left-0"
@@ -96,8 +92,7 @@
                         <b-form-group label="Audience Level 1">
                           <b-form-input
                             list="Level1options"
-                            id="input-with-list"
-                            size="lg"
+                            id="input-with-list-one"
                             class="border-top-0 border-right-0 border-left-0 border-bottom-10"
                             v-b-tooltip.hover
                             :title="computedLevelOneotoolTip"
@@ -126,14 +121,57 @@
                             </b-input-group-text>
                             <b-form-input
                               list="Level2options"
-                              id="input-with-list"
-                              size="lg"
+                              id="input-with-list-two"
                               class="border-top-0 border-right-0 border-left-0 border-bottom-10"
                               v-b-tooltip.hover
                               :title="computedLevelTwotoolTip"
                               v-model="audience2"
                             ></b-form-input>
-                            <b-form-datalist id="Level2options" :options="Level2options"></b-form-datalist>
+                            <b-form-datalist id="Level2options" :options="computedLevelTwoOptions"></b-form-datalist>
+                          </b-input-group>
+                        </b-form-group>
+                      </div>
+                      <div v-if="checked.states">
+                        <hr>
+                        <StateInput
+                          v-if="!isLoading"
+                          :_autocompleteItems="computedInitialstates"
+                          :processingForm="isprocessingForm"
+                          @stateTags="StateTags =>form.stateTags = StateTags"
+                        ></StateInput>
+                      </div>
+                      <div>
+                        <b-form-group label="Select a Location ">
+                          <b-input-group>
+                            <b-input-group-text
+                              v-if="isLocationOptionloading"
+                              slot="append"
+                              class="border-top-0 border-right-0 border-left-0"
+                              v-b-tooltip.hover
+                              title="Loading..."
+                            >
+                              <div>
+                                <b-spinner
+                                  small
+                                  style="width: 1.5rem; height: 1.5rem;"
+                                  label="Small Spinner"
+                                  type="grow"
+                                  variant="info"
+                                ></b-spinner>
+                              </div>
+                            </b-input-group-text>
+                            <b-form-input
+                              list="LocationOptions"
+                              id="input-with-list-three"
+                              class="border-top-0 border-right-0 border-left-0 border-bottom-10"
+                              v-b-tooltip.hover
+                              :title="computedLocationToolTip"
+                              v-model="Location"
+                            ></b-form-input>
+                            <b-form-datalist
+                              id="LocationOptions"
+                              :options="computedLocationOptions"
+                            ></b-form-datalist>
                           </b-input-group>
                         </b-form-group>
                       </div>
@@ -165,40 +203,30 @@
                           ></b-form-checkbox-group>
                         </b-form-group>
                       </div>
-                      <div v-if="checked.states">
-                        <hr>
-                        <StateInput
-                          v-if="!isLoading"
-                          :_autocompleteItems="computedInitialstates"
-                          :processingForm="isprocessingForm"
-                          @stateTags="StateTags =>form.stateTags = StateTags"
-                        ></StateInput>
-                      </div>
-                      <div v-if="checked.advancedQuery">
-                        <hr>
-                        <AdvancedSearch></AdvancedSearch>
-                      </div>
                       <br>
                       <b-button type="submit" variant="primary">Analyze audience</b-button>
                       <b-button type="reset" variant="danger">Reset</b-button>
                     </b-form>
                   </div>
                 </b-tab>
-                <b-tab title=" view"></b-tab>
-                <b-tab title="confirm"></b-tab>
+
+                <b-tab ref="Wviewtab" title="view">
+                  <div v-if="checked.advancedQuery">
+                    <hr>
+                    <AdvancedSearch 
+                    :options="advancedFilters"
+                    :totalunique="computedTotalUniqueID"
+                    :locationcount ="computedcount"
+                    ></AdvancedSearch>
+                  </div>
+                </b-tab>
               </b-tabs>
             </b-card>
             <br>
-            <div class="text-center">
-              <b-button-group class="mt-2">
-                <b-button @click="tabIndex--">Previous</b-button>
-                <b-button @click="tabIndex++">Next</b-button>
-              </b-button-group>
-            </div>
           </div>
         </b-col>
         <b-col class="col-6" v-if="showMap">
-          <GForm :processingForm="isprocessingForm"></GForm>
+          <GForm :processingForm="isprocessingForm" :markers="computedmarkers"></GForm>
         </b-col>
       </b-row>
     </div>
@@ -206,25 +234,18 @@
 </template>
 <script>
 import { ApiFactory } from "./../api/ApiFactory";
-import NameInput from "./input/nameInput.vue";
-import AudienceInput from "./input/audienceInput.vue";
-import CategoryInput from "./input/categoryInput.vue";
 import StateInput from "./input/stateInput.vue";
 import GForm from "./map/map.vue";
-import NavBar from "./views/Nav.vue";
 import AdvancedSearch from "./views/Advancedquery.vue";
 import debounce from "lodash/debounce";
+import clone from "lodash/clone";
 const StateApi = ApiFactory.get("states");
 const LevelsApi = ApiFactory.get("levels");
 const QueryApi = ApiFactory.get("query");
 export default {
   components: {
     StateInput,
-    NameInput,
-    AudienceInput,
-    CategoryInput,
     GForm,
-    NavBar,
     AdvancedSearch
   },
   props: {},
@@ -240,11 +261,12 @@ export default {
       checked: {
         nationwide: true,
         states: false,
-        advancedQuery: false
+        advancedQuery: true
       },
       isLevel2optionloading: false,
-      frequency:{
-        frequencyoptions: ["Mild(1-2)", "Moderate(3-4)", "Frequent(+5)"],
+      isLocationOptionloading: false,
+      frequency: {
+        frequencyoptions: ["Mild", "Moderate", "Frequent"],
         allSelected: false,
         indeterminate: false
       },
@@ -255,10 +277,14 @@ export default {
       },
       audience1: "",
       audience2: "",
+      location: "",
       Level1options: [],
       Level2options: [],
+      LocationOptions: [],
       initialStates: [],
-      query: []
+      query: [],
+      response: [],
+      advancedFilters: {}
     };
   },
   methods: {
@@ -277,16 +303,23 @@ export default {
       this.isprocessingForm = true;
       this.form.Level1 = this.audience1;
       this.form.Level2 = this.audience2;
+      this.form.location = this.location;
       this.form.frequency = this.frequencyselected;
       this.form.audience = this.checked.states ? "states" : "nationwide";
       this.form.enableadvance = this.checked.advancedQuery;
+      this.advancedFilters = clone(this.form);
       var lastquery = this.query.push(this.form) - 1;
-      console.log(this.query[lastquery]);
       var vm = this;
       QueryApi.query(this.query[lastquery])
         .then(function(response) {
-          vm.isprocessingForm = false;
-          vm.tabIndex = 1;
+          let resholder = {};
+          resholder.meta = response.data.meta;
+          resholder.data = response.data.data;
+          vm.response.push(resholder);
+          vm.$nextTick(() => {
+            vm.isprocessingForm = false;
+            vm.tabIndex = 1;
+          });
         })
         .catch(function(error) {
           vm.isprocessingForm = false;
@@ -303,7 +336,6 @@ export default {
       this.audience1 = "";
       this.audience2 = "";
       this.checked.nationwide = true;
-      this.checked.advancedQuery = false;
       this.$nextTick(() => {
         this.show = true;
       });
@@ -377,6 +409,35 @@ export default {
         this.isLevel2optionloading = false;
         return;
       }
+    },
+    getLocations() {
+      if (this.computedCanLoadLocations) {
+        var vm = this;
+        let level1 = this.audience1.toLocaleLowerCase();
+        let level2 = this.audience2.toLocaleLowerCase();
+        let url = `http://127.0.0.1:5000/api/leveloptions?level=${level1}&sublevel=${level2}`;
+        fetch(url)
+          .then(resp => resp.json())
+          .then(data => {
+            vm.isLocationOptionloading = false;
+            vm.LocationOptions = data.data.map(res => {
+              return res.LOCATION;
+            }, 0);
+          })
+          .catch(error => {
+            console.log(error);
+            vm.isLevel2optionloading = false;
+            vm.errors.push({
+              type: "warning",
+              message: `An error occured while retriving Location optons for ${
+                vm.audience1
+              }`
+            });
+          });
+      } else {
+        this.isLocationOptionloading = false;
+        return;
+      }
     }
   },
   watch: {
@@ -385,10 +446,13 @@ export default {
         return;
       }
       this.audience2 = "";
+      this.location = "";
+      this.Level2options = [];
+      this.LocationOptions = [];
       this.isLevel2optionloading = true;
       this.debouncedGetLevel2options();
     },
-    frequencyselected(newVal, oldVal) {
+    frequencyselected: function(newVal, oldVal) {
       if (newVal.length === 0) {
         this.frequency.indeterminate = false;
         this.frequency.allSelected = false;
@@ -399,12 +463,22 @@ export default {
         this.frequency.indeterminate = true;
         this.frequency.allSelected = false;
       }
+    },
+    audience2: function(newValue, oldValue) {
+      if (newValue === oldValue) {
+        return;
+      }
+      this.location = "";
+      this.LocationOptions = [];
+      this.isLocationOptionloading = true;
+      this.debouncedGetLocationoptions();
     }
   },
   created() {
     this.initializeapp();
     this.initOptions();
     this.debouncedGetLevel2options = debounce(this.getLevel2options, 500);
+    this.debouncedGetLocationoptions = debounce(this.getLocations, 500);
   },
   computed: {
     namestate() {
@@ -449,8 +523,80 @@ export default {
       return this.computedLevelOneOptions.indexOf(this.audience1) != -1
         ? `Selected  level : ${this.audience1.toLocaleLowerCase()}`
         : "Select Main audience level..";
+    },
+    computedLevelTwoOptions() {
+      return this.Level2options.map(leveltwo => {
+        return leveltwo.toUpperCase();
+      }, 0);
+    },
+    computedLocationOptions() {
+      return this.LocationOptions.map(location => {
+        return location.toUpperCase();
+      }, 0);
+    },
+    computedCanLoadLocations() {
+      return this.computedCanLoadLevelTwo;
+    },
+    computedLocationToolTip() {
+      return this.computedLevelOneOptions.indexOf(this.audience1) != -1
+        ? `Location options for ${this.audience1}`
+        : " Select Main audience level first.";
+    },
+    computedmarkers() {
+      if (this.response.length === 0) {
+        return [];
+      }
+      var lastEntry = this.response[this.response.length - 1];
+      var lastEntryMeta = lastEntry.meta;
+      const lastEntryData = lastEntry.data;
+      const unique = [];
+      const map = new Map();
+      for (const item of lastEntryData) {
+        if (!map.has(item.ID)) {
+          map.set(item.ID, true);
+          unique.push(item.ID);
+        }
+      }
+      return lastEntryData
+        .filter(marker => {
+          return unique.indexOf(marker.ID) != -1;
+        })
+        .map(marker => {
+          return { map: marker._map, count: marker.count };
+        }, 0);
+    },
+    computedResponse() {
+      var data = this.computedmarkers;
+      if (data.length === 0) {
+        return [];
+      }
+      var result = Array.from(new Set(data.map(s => s.count))).map(count => {
+        return { count: count, map: data.find(s => s.count === count).map };
+      });
+      var markers = [];
+      result.forEach(element => {
+        let cordinate = {};
+        cordinate.count = element.count;
+        element.map.forEach(x => {
+          cordinate.lat = x.latitude;
+          cordinate.lng = x.longitude;
+          cordinate.name = x.name;
+          markers.push(cordinate);
+        });
+      });
+      return markers;
+    },
+    computedTotalUniqueID() {
+      return this.computedResponse.reduce(
+        (totalIds, currentobj) => totalIds + currentobj.count,
+        0
+      );
+    },
+    computedcount() {
+      return this.computedResponse.length;
     }
-  }
+  },
+  mounted() {}
 };
 </script>
 <style lang="css">

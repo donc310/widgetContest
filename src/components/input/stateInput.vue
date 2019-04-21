@@ -1,7 +1,7 @@
 <template>
   <div>
     <vue-tags-input
-      placeholder=" Enter locations"
+      placeholder=" Enter states"
       v-model="tag"
       :tags="tags"
       :allow-edit-tags="true"

@@ -5,11 +5,12 @@ const queryString = require('query-string');
 export default {
 query(query){
     var param = {}
-    param.Level_1 = query.Level1;
-    param.Level_2 = query.Level2;
+    param.Level_1 = query.Level1.toLocaleLowerCase();
+    param.Level_2 = query.Level2.toLocaleLowerCase();
     param.audience = query.audience;
-    param.name = query.name
-    param.enableadvance = query.enableadvance
+    param.name = query.name;
+    param.location = query.location;
+    param.enableadvance = query.enableadvance;
     var paramfrequency ={frequency:query.frequency};
     var paramStates = {states:query.stateTags};
     const x = queryString.stringify(param);

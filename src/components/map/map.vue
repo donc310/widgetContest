@@ -10,7 +10,7 @@
     >
       <div v-if="!clustering">
         <GmapMarker
-          v-for="m in mapmarkers"
+          v-for="m in computedMarkers"
           :position="m.position"
           label="★"
           :opacity="m.opacity"
@@ -18,14 +18,14 @@
           @click="markerClicked(m,$event)"
           @position_changed="updateChild(m, 'position', $event)"
           :key="m.id"
+          heading="Heat Map"
         >
           <gmap-info-window :opened="m.ifw">{{m.ifw2text}}</gmap-info-window>
         </GmapMarker>
-        <gmap-info-window :position="reportedCenter" :opened="ifw2">
-          <span v-if="!processingForm">
-          {{ifw2text}}
-          </span>
-          <div  v-if="processingForm" class="d-flex justify-content-center mb-3">
+
+        <gmap-info-window :position="reportedCenter" :opened="computedcanopenmainwindow">
+          <span v-if="!processingForm ">{{ifw2text}}</span>
+          <div v-if="processingForm" class="d-flex justify-content-center mb-3">
             <b-spinner
               small
               style="width: 2.0rem; height: 2.0rem;"
@@ -41,14 +41,14 @@
 </template>
 <script>
 export default {
-  components:{
-  },
-  props:{
-    processingForm:{type:Boolean}
+  components: {},
+  props: {
+    processingForm: { type: Boolean },
+    markers: { type: Array }
   },
   data() {
     return {
-      mapmarkers: [],
+      mapmarkers: this.markers,
       lastId: 0,
       center: { lat: 38.58677159688291, lng: -100.54108291233062 },
       reportedCenter: { lat: 38.58677159688291, lng: -100.54108291233062 },
@@ -113,10 +113,47 @@ export default {
   },
   watch:{
 
+    
   },
-  updated(){},
-  computed:{},
-  created(){},
-  mounted(){}
+  updated() {},
+  computed: {
+    computedMarkers() {
+      var result = Array.from(new Set(this.markers.map(s => s.count))).map(
+        count => {
+          return { count: count, map: this.markers.find(s => s.count === count).map };
+        }
+      );
+      var markers = [];
+      result.forEach(element => {
+        let cordinate = {};
+        cordinate.count = element.count;
+        element.map.forEach(x => {
+          cordinate.lat = x.latitude;
+          cordinate.lng = x.longitude;
+          cordinate.name = x.name;
+          markers.push(cordinate);
+        });
+      });
+      return markers.map((mark,index)=>{return{
+        id: index,
+        position: {
+          lat: mark.lat,
+          lng: mark.lng
+        },
+        opacity: 1,
+        draggable: false,
+        enabled: true,
+        ifw: true,
+        ifw2text: `state: ${mark.name} unique Id's ${mark.count}`
+
+      }},0)
+    },
+    computedcanopenmainwindow() {
+      return this.computedMarkers.length  === 0 ;
+    },
+  },
+
+  created() {},
+  mounted() {}
 };
 </script>
