@@ -388,7 +388,7 @@ export default {
       if (this.computedCanLoadLevelTwo) {
         var vm = this;
         let level = this.audience1.toLocaleLowerCase();
-        fetch(`http://127.0.0.1:5000/api/leveloptions?level=${level}`)
+        fetch(`https://contestendpoint.herokuapp.com/api/leveloptions?level=${level}`)
           .then(resp => resp.json())
           .then(data => {
             vm.isLevel2optionloading = false;
@@ -416,7 +416,7 @@ export default {
         var vm = this;
         let level1 = this.audience1.toLocaleLowerCase();
         let level2 = this.audience2.toLocaleLowerCase();
-        let url = `http://127.0.0.1:5000/api/leveloptions?level=${level1}&sublevel=${level2}`;
+        let url = `https://contestendpoint.herokuapp.com/api/leveloptions?level=${level1}&sublevel=${level2}`;
         fetch(url)
           .then(resp => resp.json())
           .then(data => {
