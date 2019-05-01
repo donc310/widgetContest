@@ -123,7 +123,7 @@ export default {
       totalunique(newValue,oldValue){
         if(newValue === oldValue){return}
         this.uniquecount = newValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-        this.units = newValue * 1.5444.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");;
+        this.units = newValue * 1.5444;
       },
       locationcount(newValue, oldValue){
         if(newValue === oldValue){return}
