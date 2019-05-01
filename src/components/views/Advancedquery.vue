@@ -122,8 +122,8 @@ export default {
       },
       totalunique(newValue,oldValue){
         if(newValue === oldValue){return}
-        this.uniquecount = newValue;
-        this.units = newValue * 1.5444;
+        this.uniquecount = newValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        this.units = newValue * 1.5444.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");;
       },
       locationcount(newValue, oldValue){
         if(newValue === oldValue){return}
