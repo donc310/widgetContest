@@ -41,14 +41,13 @@
 </template>
 <script>
 export default {
-  components: {},
   props: {
     processingForm: { type: Boolean },
     markers: { type: Array }
   },
   data() {
     return {
-      mapmarkers: this.markers,
+      mapmarkers:[],
       lastId: 0,
       center: { lat: 38.58677159688291, lng: -100.54108291233062 },
       reportedCenter: { lat: 38.58677159688291, lng: -100.54108291233062 },
@@ -118,33 +117,24 @@ export default {
   updated() {},
   computed: {
     computedMarkers() {
+     if(this.markers.length === 0){return []}
+
       var result = Array.from(new Set(this.markers.map(s => s.count))).map(
         count => {
           return { count: count, map: this.markers.find(s => s.count === count).map };
         }
       );
-      var markers = [];
-      result.forEach(element => {
-        let cordinate = {};
-        cordinate.count = element.count;
-        element.map.forEach(x => {
-          cordinate.lat = x.latitude;
-          cordinate.lng = x.longitude;
-          cordinate.name = x.name;
-          markers.push(cordinate);
-        });
-      });
-      return markers.map((mark,index)=>{return{
+      return result.map((mark,index)=>{return{
         id: index,
         position: {
-          lat: mark.lat,
-          lng: mark.lng
+          lat: mark.map.latitude,
+          lng: mark.map.longitude
         },
         opacity: 1,
         draggable: false,
         enabled: true,
         ifw: true,
-        ifw2text: `state: ${mark.name} unique Id's ${mark.count}`
+        ifw2text: `state: ${mark.map.name} , Audience: ${mark.count}`
 
       }},0)
     },

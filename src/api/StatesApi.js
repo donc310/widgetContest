@@ -5,6 +5,6 @@ get() {
     return Api.get(`${resource}`);
 },
 getState(stateId) {
-    return Repository.get(`${resource}/${stateId}`);
+    return Api.get(`${resource}/${stateId}`);
 },
 };

@@ -62,7 +62,7 @@
         label-class="font-weight-bold pt-0"
         class="mb-0"
       >
-        <b-form-group label-cols-sm="3" label="Unique Id's" label-align-sm="right" label-for="ids">
+        <b-form-group label-cols-sm="3" label="Audience Total" label-align-sm="right" label-for="ids">
           <b-form-input id="ids" v-model="uniquecount" disabled></b-form-input>
         </b-form-group>
 

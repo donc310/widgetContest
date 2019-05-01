@@ -97,6 +97,7 @@
                             v-b-tooltip.hover
                             :title="computedLevelOneotoolTip"
                             v-model="audience1"
+                            required
                           ></b-form-input>
                           <b-form-datalist id="Level1options" :options="computedLevelOneOptions"></b-form-datalist>
                         </b-form-group>
@@ -166,7 +167,7 @@
                               class="border-top-0 border-right-0 border-left-0 border-bottom-10"
                               v-b-tooltip.hover
                               :title="computedLocationToolTip"
-                              v-model="Location"
+                              v-model="location"
                             ></b-form-input>
                             <b-form-datalist
                               id="LocationOptions"
@@ -226,7 +227,7 @@
           </div>
         </b-col>
         <b-col class="col-6" v-if="showMap">
-          <GForm :processingForm="isprocessingForm" :markers="computedmarkers"></GForm>
+          <GForm :processingForm="isprocessingForm" :markers="computedMarkersUpdate"></GForm>
         </b-col>
       </b-row>
     </div>
@@ -310,7 +311,7 @@ export default {
       this.advancedFilters = clone(this.form);
       var lastquery = this.query.push(this.form) - 1;
       var vm = this;
-      QueryApi.query(this.query[lastquery])
+      QueryApi.total(this.query[lastquery])
         .then(function(response) {
           let resholder = {};
           resholder.meta = response.data.meta;
@@ -439,6 +440,7 @@ export default {
         return;
       }
     }
+
   },
   watch: {
     audience1: function(newValue, oldValue) {
@@ -531,7 +533,7 @@ export default {
     },
     computedLocationOptions() {
       return this.LocationOptions.map(location => {
-        return location.toUpperCase();
+        return location.split(' ').map( w =>  w.substring(0,1).toUpperCase()+ w.substring(1)).join(' ');
       }, 0);
     },
     computedCanLoadLocations() {
@@ -565,26 +567,30 @@ export default {
           return { map: marker._map, count: marker.count };
         }, 0);
     },
+
+    //update
+    computedMarkersUpdate(){
+      if (this.response.length === 0) {
+        return [];
+      }
+      var lastEntry = this.response[this.response.length - 1];
+      var lastEntryMeta = lastEntry.meta;
+      const lastEntryData = lastEntry.data;
+      return lastEntryData
+      .filter(marker=>{return typeof(marker._map.latitude)!="undefined"})
+      .map(marker => {
+        return { map: marker._map, count: marker.count };
+      }, 0);
+    },
     computedResponse() {
-      var data = this.computedmarkers;
+      var data = this.computedMarkersUpdate;
       if (data.length === 0) {
         return [];
       }
       var result = Array.from(new Set(data.map(s => s.count))).map(count => {
         return { count: count, map: data.find(s => s.count === count).map };
       });
-      var markers = [];
-      result.forEach(element => {
-        let cordinate = {};
-        cordinate.count = element.count;
-        element.map.forEach(x => {
-          cordinate.lat = x.latitude;
-          cordinate.lng = x.longitude;
-          cordinate.name = x.name;
-          markers.push(cordinate);
-        });
-      });
-      return markers;
+      return result
     },
     computedTotalUniqueID() {
       return this.computedResponse.reduce(

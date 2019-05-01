@@ -72,29 +72,7 @@ export default {
       autocompleteItems:this._autocompleteItems
     };
   },
-  methods: {
-    getStates() {
-      this.loading = true;
-      fetch("http://127.0.0.1:5000/api/states")
-        .then(resp => resp.json())
-        .then(data => {
-          this.autocompleteItems = data.data.map(state => {
-            return {
-              text: state.name,
-              lat: state.latitude,
-              lng: state.longitude,
-              abv: state.abv,
-              Est: state.AudienceTotal
-            };
-          }, 0);
-          this.loading = false;
-        })
-        .catch(error => {
-          console.log(error);
-          this.errored = true;
-        });
-    }
-  },
+  methods: {},
   created() {},
   watch:{
     tags: function(newValue,oldValue){
