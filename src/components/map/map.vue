@@ -12,7 +12,7 @@
         <GmapMarker
           v-for="m in computedMarkers"
           :position="m.position"
-          label="★"
+          :label="m.abv"
           :opacity="m.opacity"
           :draggable="m.draggable"
           @click="markerClicked(m,$event)"
@@ -20,7 +20,14 @@
           :key="m.id"
           heading="Heat Map"
         >
-          <gmap-info-window :opened="m.ifw">{{m.ifw2text}}</gmap-info-window>
+          <gmap-info-window :opened="m.ifw">
+            <div class="text-center">
+              <b-button variant="info">
+                {{m.state}}
+                <b-badge pill variant="light">{{m.count}}<span class="sr-only"></span></b-badge>
+              </b-button>
+            </div>
+          </gmap-info-window>
         </GmapMarker>
 
         <gmap-info-window :position="reportedCenter" :opened="computedcanopenmainwindow">
@@ -100,7 +107,11 @@ export default {
         };
       }
     },
-    markerClicked(obj, event) {},
+    markerClicked(obj, event){
+      if (! obj.enabled){
+        obj.enabled = true;
+      }
+    },
     updateMap(newValue) {
       var update = newValue;
       this.mapmarkers = [];
@@ -134,7 +145,9 @@ export default {
         draggable: false,
         enabled: true,
         ifw: true,
-        ifw2text: `state: ${mark.map.name} , Audience: ${mark.count}`
+        state: mark.map.name,
+        count: mark.count,
+        abv:mark.map.abv
 
       }},0)
     },
