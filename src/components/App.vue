@@ -57,7 +57,7 @@
                             required
                             type="text"
                             v-b-tooltip.hover
-                            title="Enter a search title"
+                            :title="computedName"
                           ></b-form-input>
                         </b-input-group>
                       </b-form-group>
@@ -118,7 +118,22 @@
                           </b-input-group>
                         </b-form-group>
                       </div>
+                      <br>
+                      <b-form inline>
+                        <label
+                          class="mr-sm-2"
+                          for="inline-form-custom-select-pref"
+                        >Enable location filters</label>
+                        <b-form-checkbox
+                          v-model="enablefilter"
+                          name="nation-wide-check-button"
+                          switch
+                          inline
+                        >
+                        </b-form-checkbox>
+                      </b-form>
                       <hr>
+                      <div v-if="enablefilter">
                       <div>
                         <b-form-group label="Location category">
                           <b-input-group>
@@ -215,6 +230,7 @@
                           ></b-form-checkbox-group>
                         </b-form-group>
                       </div>
+                      </div>
                       <br>
                       <b-button type="submit" variant="primary">Analyze audience</b-button>
                       <b-button type="reset" variant="danger">Reset</b-button>
@@ -283,6 +299,7 @@ export default {
       isLoading: false,
       ResetWidget: false,
       isprocessingForm: false,
+      enablefilter:false,
       checked: {
         nationwide: true,
         states: false,
@@ -519,16 +536,19 @@ export default {
     );
   },
   computed: {
+    computedName(){
+      return this.form.name === "Enter a search title"? "":`${this.form.name}`;
+    },
     namestate() {
-      return this.form.name.length >= 4 ? true : false;
+      return this.form.name.length >= 10 ? true : false;
     },
     invalidFeedback() {
-      if (this.form.name.length > 4) {
+      if (this.form.name.length > 10) {
         return "";
       } else if (this.form.name.length > 0) {
-        return "Enter at least 4 characters";
+        return "Enter at least 10 characters";
       } else {
-        return "Please enter something";
+        return "Please enter a search title ";
       }
     },
     validFeedback() {
