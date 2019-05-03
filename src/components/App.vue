@@ -139,6 +139,8 @@
                           :_autocompleteItems="computedInitialstates"
                           :processingForm="isprocessingForm"
                           @stateTags="StateTags =>form.stateTags = StateTags"
+                          @stateCordinates="stateCordinates=>statecordinates=stateCordinates"
+                          :reset="ResetWidget"
                         ></StateInput>
                       </div>
                       <div>
@@ -214,10 +216,12 @@
                 <b-tab ref="Wviewtab" title="view">
                   <div v-if="checked.advancedQuery">
                     <hr>
-                    <AdvancedSearch 
-                    :options="advancedFilters"
-                    :totalunique="computedTotalUniqueID"
-                    :locationcount ="computedcount"
+                    <AdvancedSearch
+                      :options="advancedFilters"
+                      :totalunique="computedTotalUniqueID"
+                      :locationcount="computedcount"
+                      :reset="computedcanreset"
+                      @resetWidget="evt=>ResetWidget=true"
                     ></AdvancedSearch>
                   </div>
                 </b-tab>
@@ -227,7 +231,15 @@
           </div>
         </b-col>
         <b-col class="col-6" v-if="showMap">
-          <GForm :processingForm="isprocessingForm" :markers="computedMarkersUpdate"></GForm>
+          <Chart
+            :_response="computedResponse"
+            :processingForm="isprocessingForm"
+            :searchCaption="form.name"
+            :selectedstates="form.stateTags "
+            :_type="computedCharttype"
+            :_states="initialStates"
+            :mode="mode"
+          ></Chart>
         </b-col>
       </b-row>
     </div>
@@ -236,17 +248,18 @@
 <script>
 import { ApiFactory } from "./../api/ApiFactory";
 import StateInput from "./input/stateInput.vue";
-import GForm from "./map/map.vue";
+import Chart from "./map/chart.vue";
 import AdvancedSearch from "./views/Advancedquery.vue";
 import debounce from "lodash/debounce";
 import clone from "lodash/clone";
+
 const StateApi = ApiFactory.get("states");
 const LevelsApi = ApiFactory.get("levels");
 const QueryApi = ApiFactory.get("query");
 export default {
   components: {
     StateInput,
-    GForm,
+    Chart,
     AdvancedSearch
   },
   props: {},
@@ -255,9 +268,11 @@ export default {
       errors: [],
       notifications: [],
       tabIndex: 0,
+      mode: 0,
       showForm: true,
       showMap: true,
       isLoading: false,
+      ResetWidget: false,
       isprocessingForm: false,
       checked: {
         nationwide: true,
@@ -319,6 +334,7 @@ export default {
           vm.response.push(resholder);
           vm.$nextTick(() => {
             vm.isprocessingForm = false;
+            vm.mode = 1;
             vm.tabIndex = 1;
           });
         })
@@ -337,6 +353,7 @@ export default {
       this.audience1 = "";
       this.audience2 = "";
       this.checked.nationwide = true;
+      this.response = [];
       this.$nextTick(() => {
         this.show = true;
       });
@@ -388,7 +405,9 @@ export default {
       if (this.computedCanLoadLevelTwo) {
         var vm = this;
         let level = this.audience1.toLocaleLowerCase();
-        fetch(`https://contestendpoint.herokuapp.com/api/leveloptions?level=${level}`)
+        fetch(
+          `https://contestendpoint.herokuapp.com/api/leveloptions?level=${level}`
+        )
           .then(resp => resp.json())
           .then(data => {
             vm.isLevel2optionloading = false;
@@ -440,7 +459,6 @@ export default {
         return;
       }
     }
-
   },
   watch: {
     audience1: function(newValue, oldValue) {
@@ -474,6 +492,15 @@ export default {
       this.LocationOptions = [];
       this.isLocationOptionloading = true;
       this.debouncedGetLocationoptions();
+    },
+    ResetWidget: function(newValue) {
+      if (newValue) {
+        this.tabIndex =0;
+        this.mode = 0;
+        this.form.name = "";
+        this.checked.nationwide = true;
+        this.response = [];
+      }
     }
   },
   created() {
@@ -504,7 +531,9 @@ export default {
           text: state.name,
           abv: state.abv,
           iconColor: "#000000",
-          myicon: "location_on"
+          myicon: "location_on",
+          lat: state.latitude,
+          lng: state.longitude
         };
       }, 0);
     },
@@ -533,7 +562,10 @@ export default {
     },
     computedLocationOptions() {
       return this.LocationOptions.map(location => {
-        return location.split(' ').map( w =>  w.substring(0,1).toUpperCase()+ w.substring(1)).join(' ');
+        return location
+          .split(" ")
+          .map(w => w.substring(0, 1).toUpperCase() + w.substring(1))
+          .join(" ");
       }, 0);
     },
     computedCanLoadLocations() {
@@ -567,9 +599,12 @@ export default {
           return { map: marker._map, count: marker.count };
         }, 0);
     },
+    computedcanreset() {
+      return this.computedResponse.length === 0 ? false : true;
+    },
 
     //update
-    computedMarkersUpdate(){
+    computedMarkersUpdate() {
       if (this.response.length === 0) {
         return [];
       }
@@ -577,10 +612,12 @@ export default {
       var lastEntryMeta = lastEntry.meta;
       const lastEntryData = lastEntry.data;
       return lastEntryData
-      .filter(marker=>{return typeof(marker._map.latitude)!="undefined"})
-      .map(marker => {
-        return { map: marker._map, count: marker.count };
-      }, 0);
+        .filter(marker => {
+          return typeof marker._map.latitude != "undefined";
+        })
+        .map(marker => {
+          return { map: marker._map, count: marker.count };
+        }, 0);
     },
     computedResponse() {
       var data = this.computedMarkersUpdate;
@@ -590,7 +627,7 @@ export default {
       var result = Array.from(new Set(data.map(s => s.count))).map(count => {
         return { count: count, map: data.find(s => s.count === count).map };
       });
-      return result
+      return result;
     },
     computedTotalUniqueID() {
       return this.computedResponse.reduce(
@@ -600,6 +637,9 @@ export default {
     },
     computedcount() {
       return this.computedResponse.length;
+    },
+    computedCharttype() {
+      return this.checked.nationwide ? 1 : 0;
     }
   },
   mounted() {}

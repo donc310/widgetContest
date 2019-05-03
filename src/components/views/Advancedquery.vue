@@ -93,8 +93,9 @@
         </b-form-group>
       </b-form-group>
         <br>
-        <b-button v-if="computedcanbuy" type="submit" @click="evt=>evt.preventDefault()" variant="primary">download</b-button>
-        <b-button v-if="!computedcanbuy" type=""  @click="evt=>evt.preventDefault()" variant="info"> purchase</b-button>
+        <b-button v-if="computedcanbuy" type="submit" @click="evt=>evt.preventDefault()" variant="primary">Download</b-button>
+        <b-button v-if="!computedcanbuy" type=""  @click="evt=>evt.preventDefault()" variant="info"> Purchase</b-button>
+        <b-button v-if="canReset" type=""  @click="handleReset($event)" variant="danger"> Reset</b-button>
     </b-card>
 
   </div>
@@ -104,7 +105,8 @@ export default {
   props: {
     options: { type: Object },
     totalunique:{type: Number, default:0},
-    locationcount:{type:Number}
+    locationcount:{type:Number},
+    reset:{type:Boolean}
   },
   data() {
     return {
@@ -114,6 +116,12 @@ export default {
     units:0.0,
     available: 0.0
     };
+  },
+  methods:{
+    handleReset(evt){
+      evt.preventDefault();
+      this.$emit("resetWidget",{reset:true})
+    }
   },
   watch:{
       options(newValue, oldValue){
@@ -135,6 +143,9 @@ export default {
     computedcanbuy(){
         return this.available > this.units;
 
+    },
+    canReset(){
+      return this.reset;
     }
   }
 };

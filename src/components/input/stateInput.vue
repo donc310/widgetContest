@@ -60,7 +60,8 @@ export default {
   },
   props: {
     _autocompleteItems: { type: Array, required: true },
-    processingForm:{type:Boolean}
+    processingForm:{type:Boolean},
+    reset:{type:Boolean}
   },
   data() {
     return {
@@ -79,8 +80,15 @@ export default {
       if(newValue.length === oldValue.length){
         return
       }
-      var postions = this.tags.map(state => {return state.abv}, 0);
-      this.$emit("stateTags",postions);
+      var states = this.tags.map(state => {return state.abv}, 0);
+      var positions = this.tags.map(cordinate=>{return {lat:cordinate.lat , lng:cordinate.lng}},0);
+      this.$emit("stateTags",states);
+      this.$emit("stateCordinates",positions);
+    },
+    reset:function(newValue){
+      if(newValue){
+        this.tags = [];
+      }
     }
   },
   computed:{
