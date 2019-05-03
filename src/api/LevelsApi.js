@@ -5,7 +5,11 @@ export default {
 get(){
     return Api.get(`${resource}`);
 },
-getLevel(levelId){
-    return Api.get(`${resource}/${levelId}`);
+getcat(location){
+    return Api.get(`${resource}?location=${location}`);
 },
+getsubcat(location ,cat){
+    return Api.get(`${resource}?location=${location}&level=${cat}`);
+
+}
 };

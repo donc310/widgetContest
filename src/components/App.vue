@@ -34,10 +34,10 @@
                       <hr>
                       <b-form-group
                         id="fieldset-1"
+                        label="Search title"
                         :invalid-feedback="invalidFeedback"
                         :valid-feedback="validFeedback"
                         :state="namestate"
-                        description="*Search tittle "
                       >
                         <b-input-group id="WidgetInputname" :state="namestate" trim>
                           <b-input-group-text
@@ -56,11 +56,12 @@
                             placeholder=" 'NY travels Moderate'"
                             required
                             type="text"
+                            v-b-tooltip.hover
+                            title="Enter a search title"
                           ></b-form-input>
                         </b-input-group>
                       </b-form-group>
                       <hr>
-
                       <b-form inline>
                         <label
                           class="mr-sm-2"
@@ -87,24 +88,76 @@
                           <span></span>
                         </b-form-checkbox>
                       </b-form>
+                      <br>
+                      <div v-if="checked.states">
+                        <StateInput
+                          v-if="!isLoading"
+                          :_autocompleteItems="computedInitialstates"
+                          :processingForm="isprocessingForm"
+                          @stateTags="StateTags =>form.stateTags = StateTags"
+                          @stateCordinates="stateCordinates=>statecordinates=stateCordinates"
+                          :reset="ResetWidget"
+                        ></StateInput>
+                      </div>
                       <hr>
                       <div>
-                        <b-form-group label="Audience Level 1">
-                          <b-form-input
-                            list="Level1options"
-                            id="input-with-list-one"
-                            class="border-top-0 border-right-0 border-left-0 border-bottom-10"
-                            v-b-tooltip.hover
-                            :title="computedLevelOneotoolTip"
-                            v-model="audience1"
-                            required
-                          ></b-form-input>
-                          <b-form-datalist id="Level1options" :options="computedLevelOneOptions"></b-form-datalist>
+                        <b-form-group label="Select a Location ">
+                          <b-input-group>
+                            <b-form-input
+                              list="LocationOptions"
+                              id="input-with-list-three"
+                              class="border-top-0 border-right-0 border-left-0 border-bottom-10"
+                              v-b-tooltip.hover
+                              :title="computedLocationToolTip"
+                              v-model="location"
+                            ></b-form-input>
+                            <b-form-datalist
+                              id="LocationOptions"
+                              :options="computedLocationOptions"
+                            ></b-form-datalist>
+                          </b-input-group>
                         </b-form-group>
-                        <b-form-group label="Audience Level 2">
+                      </div>
+                      <hr>
+                      <div>
+                        <b-form-group label="Location category">
                           <b-input-group>
                             <b-input-group-text
-                              v-if="isLevel2optionloading"
+                              v-if="isLocationCatloading"
+                              slot="append"
+                              class="border-top-0 border-right-0 border-left-0"
+                              v-b-tooltip.hover
+                              title="Loading..."
+                            >
+                              <div>
+                                <b-spinner
+                                  small
+                                  style="width: 1.5rem; height: 1.5rem;"
+                                  label="Small Spinner"
+                                  type="grow"
+                                  variant="info"
+                                ></b-spinner>
+                              </div>
+                            </b-input-group-text>
+                            <b-form-input
+                              list="locationcats"
+                              id="input-with-list-one"
+                              class="border-top-0 border-right-0 border-left-0 border-bottom-10"
+                              v-b-tooltip.hover
+                              :title="computedLocationCatToolTip"
+                              v-model="LocationCat"
+                              required
+                            ></b-form-input>
+                            <b-form-datalist
+                              id="locationcats"
+                              :options="computedLocationCatOptions"
+                            ></b-form-datalist>
+                          </b-input-group>
+                        </b-form-group>
+                        <b-form-group label="Location sub-category">
+                          <b-input-group>
+                            <b-input-group-text
+                              v-if="isLocationSubCatloading"
                               slot="append"
                               class="border-top-0 border-right-0 border-left-0"
                               v-b-tooltip.hover
@@ -125,61 +178,17 @@
                               id="input-with-list-two"
                               class="border-top-0 border-right-0 border-left-0 border-bottom-10"
                               v-b-tooltip.hover
-                              :title="computedLevelTwotoolTip"
-                              v-model="audience2"
-                            ></b-form-input>
-                            <b-form-datalist id="Level2options" :options="computedLevelTwoOptions"></b-form-datalist>
-                          </b-input-group>
-                        </b-form-group>
-                      </div>
-                      <div v-if="checked.states">
-                        <hr>
-                        <StateInput
-                          v-if="!isLoading"
-                          :_autocompleteItems="computedInitialstates"
-                          :processingForm="isprocessingForm"
-                          @stateTags="StateTags =>form.stateTags = StateTags"
-                          @stateCordinates="stateCordinates=>statecordinates=stateCordinates"
-                          :reset="ResetWidget"
-                        ></StateInput>
-                      </div>
-                      <div>
-                        <b-form-group label="Select a Location ">
-                          <b-input-group>
-                            <b-input-group-text
-                              v-if="isLocationOptionloading"
-                              slot="append"
-                              class="border-top-0 border-right-0 border-left-0"
-                              v-b-tooltip.hover
-                              title="Loading..."
-                            >
-                              <div>
-                                <b-spinner
-                                  small
-                                  style="width: 1.5rem; height: 1.5rem;"
-                                  label="Small Spinner"
-                                  type="grow"
-                                  variant="info"
-                                ></b-spinner>
-                              </div>
-                            </b-input-group-text>
-                            <b-form-input
-                              list="LocationOptions"
-                              id="input-with-list-three"
-                              class="border-top-0 border-right-0 border-left-0 border-bottom-10"
-                              v-b-tooltip.hover
-                              :title="computedLocationToolTip"
-                              v-model="location"
+                              :title="computedLocationSubCatToolTip"
+                              v-model="LocationSubCat"
                             ></b-form-input>
                             <b-form-datalist
-                              id="LocationOptions"
-                              :options="computedLocationOptions"
+                              id="locationsubcats"
+                              :options="computedLocationsubCatOptions"
                             ></b-form-datalist>
                           </b-input-group>
                         </b-form-group>
                       </div>
                       <div>
-                        <hr>
                         <b-form-group>
                           <template slot="label">
                             Choose Audience frequency:
@@ -279,8 +288,8 @@ export default {
         states: false,
         advancedQuery: true
       },
-      isLevel2optionloading: false,
-      isLocationOptionloading: false,
+      isLocationSubCatloading: false,
+      isLocationCatloading: false,
       frequency: {
         frequencyoptions: ["Mild", "Moderate", "Frequent"],
         allSelected: false,
@@ -291,11 +300,11 @@ export default {
         name: "",
         stateTags: []
       },
-      audience1: "",
-      audience2: "",
+      LocationCat: "",
+      LocationSubCat: "",
       location: "",
-      Level1options: [],
-      Level2options: [],
+      LocationCatOptions: [],
+      LocationSubCatOptions: [],
       LocationOptions: [],
       initialStates: [],
       query: [],
@@ -393,7 +402,7 @@ export default {
       var vm = this;
       LevelsApi.get()
         .then(function(response) {
-          vm.Level1options = response.data.data;
+          vm.LocationOptions = response.data.data;
           vm.isLoading = false;
         })
         .catch(function(error) {
@@ -401,76 +410,71 @@ export default {
           vm.isLoading = false;
         });
     },
-    getLevel2options() {
-      if (this.computedCanLoadLevelTwo) {
+    getLocationCatOptions() {
+      if (this.computedCanLoadCat) {
         var vm = this;
-        let level = this.audience1.toLocaleLowerCase();
-        fetch(
-          `https://contestendpoint.herokuapp.com/api/leveloptions?level=${level}`
-        )
-          .then(resp => resp.json())
-          .then(data => {
-            vm.isLevel2optionloading = false;
-            vm.Level2options = data.data.map(res => {
-              return res.Level_2.toUpperCase();
+        let location = this.location.replace(/&/, ":");
+        LevelsApi.getcat(location)
+          .then(res => {
+            vm.isLocationCatloading = false;
+            vm.LocationCatOptions = res.data.data.map(x => {
+              return x.Level_1;
             }, 0);
           })
           .catch(error => {
             console.log(error);
-            vm.isLevel2optionloading = false;
+            vm.isLocationCatloading = false;
             vm.errors.push({
               type: "warning",
-              message: `An error occured while retriving level 2 audience for ${
-                vm.audience1
+              message: `An error occured while retriving location category for ${
+                vm.location
               }`
             });
           });
       } else {
-        this.isLevel2optionloading = false;
+        this.isLocationCatloading = false;
         return;
       }
     },
-    getLocations() {
-      if (this.computedCanLoadLocations) {
+    getLocationSubCatOptions() {
+      if (this.computedCanLoadLocationssub) {
         var vm = this;
-        let level1 = this.audience1.toLocaleLowerCase();
-        let level2 = this.audience2.toLocaleLowerCase();
-        let url = `https://contestendpoint.herokuapp.com/api/leveloptions?level=${level1}&sublevel=${level2}`;
-        fetch(url)
-          .then(resp => resp.json())
-          .then(data => {
-            vm.isLocationOptionloading = false;
-            vm.LocationOptions = data.data.map(res => {
-              return res.LOCATION;
+        let location = this.location.replace(/&/, ":");
+        let cat = this.LocationCat;
+        LevelsApi.getsubcat(location, cat)
+          .then(res => {
+            vm.isLocationSubCatloading = false;
+            vm.LocationSubCatOptions = res.data.data.map(x => {
+              return x.Level_2;
             }, 0);
           })
           .catch(error => {
             console.log(error);
-            vm.isLevel2optionloading = false;
+            vm.isLocationSubCatloading = false;
             vm.errors.push({
               type: "warning",
-              message: `An error occured while retriving Location optons for ${
-                vm.audience1
+              message: `An error occured while retriving sub categories  for ${
+                vm.LocationCat
               }`
             });
           });
       } else {
-        this.isLocationOptionloading = false;
+        this.isLocationSubCatloading = false;
         return;
       }
     }
   },
   watch: {
-    audience1: function(newValue, oldValue) {
+    location: function(newValue, oldValue) {
       if (newValue === oldValue) {
         return;
       }
-      this.audience2 = "";
-      this.location = "";
-      this.Level2options = [];
-      this.LocationOptions = [];
-      this.isLevel2optionloading = true;
-      this.debouncedGetLevel2options();
+      this.LocationCat = "";
+      this.LocationSubCat = "";
+      this.LocationCatOptions = [];
+      this.LocationSubCatOptions = [];
+      this.isLocationCatloading = true;
+      this.debouncedGetLocationCatOptions();
     },
     frequencyselected: function(newVal, oldVal) {
       if (newVal.length === 0) {
@@ -484,18 +488,17 @@ export default {
         this.frequency.allSelected = false;
       }
     },
-    audience2: function(newValue, oldValue) {
+    LocationCat: function(newValue, oldValue) {
       if (newValue === oldValue) {
         return;
       }
-      this.location = "";
-      this.LocationOptions = [];
-      this.isLocationOptionloading = true;
-      this.debouncedGetLocationoptions();
+      this.LocationSubCatOptions = [];
+      this.isLocationSubCatloading = true;
+      this.debouncedGetLocationSubCatOptions();
     },
     ResetWidget: function(newValue) {
       if (newValue) {
-        this.tabIndex =0;
+        this.tabIndex = 0;
         this.mode = 0;
         this.form.name = "";
         this.checked.nationwide = true;
@@ -506,8 +509,14 @@ export default {
   created() {
     this.initializeapp();
     this.initOptions();
-    this.debouncedGetLevel2options = debounce(this.getLevel2options, 500);
-    this.debouncedGetLocationoptions = debounce(this.getLocations, 500);
+    this.debouncedGetLocationCatOptions = debounce(
+      this.getLocationCatOptions,
+      500
+    );
+    this.debouncedGetLocationSubCatOptions = debounce(
+      this.getLocationSubCatOptions,
+      500
+    );
   },
   computed: {
     namestate() {
@@ -537,44 +546,41 @@ export default {
         };
       }, 0);
     },
-    computedLevelOneOptions() {
-      return this.Level1options.map(levelone => {
-        return levelone.Level_1.toUpperCase();
-      }, 0);
-    },
-    computedCanLoadLevelTwo() {
-      return this.computedLevelOneOptions.indexOf(this.audience1) != -1;
-    },
-    computedLevelTwotoolTip() {
-      return this.computedCanLoadLevelTwo
-        ? `Optimize your search by selecting a sub level for ${this.audience1.toLocaleLowerCase()} `
-        : " Select Audience main level first ";
-    },
-    computedLevelOneotoolTip() {
-      return this.computedLevelOneOptions.indexOf(this.audience1) != -1
-        ? `Selected  level : ${this.audience1.toLocaleLowerCase()}`
-        : "Select Main audience level..";
-    },
-    computedLevelTwoOptions() {
-      return this.Level2options.map(leveltwo => {
-        return leveltwo.toUpperCase();
-      }, 0);
+    computedCanLoadCat() {
+      return this.computedLocationOptions.indexOf(this.location) != -1;
     },
     computedLocationOptions() {
-      return this.LocationOptions.map(location => {
-        return location
-          .split(" ")
-          .map(w => w.substring(0, 1).toUpperCase() + w.substring(1))
-          .join(" ");
+      return this.LocationOptions.map(x => {
+        return x.LOCATION;
       }, 0);
     },
-    computedCanLoadLocations() {
-      return this.computedCanLoadLevelTwo;
+    computedCanLoadLocationssub() {
+      return this.computedCanLoadCat;
     },
     computedLocationToolTip() {
-      return this.computedLevelOneOptions.indexOf(this.audience1) != -1
-        ? `Location options for ${this.audience1}`
-        : " Select Main audience level first.";
+      return this.location === ""
+        ? "select a location"
+        : `selected location : ${this.location}`;
+    },
+    computedLocationCatOptions() {
+      return this.LocationCatOptions.map(option => {
+        return option;
+      }, 0);
+    },
+    computedLocationCatToolTip() {
+      return this.LocationCat === ""
+        ? "select a category"
+        : `selected category :${this.LocationCat}`;
+    },
+    computedLocationsubCatOptions() {
+      return this.LocationSubCatOptions.map(option => {
+        return option;
+      }, 0);
+    },
+    computedLocationSubCatToolTip() {
+      return this.LocationSubCat === ""
+        ? "select a sub-category"
+        : `selected-category :${this.LocationSubCat}`;
     },
     computedmarkers() {
       if (this.response.length === 0) {
