@@ -45,6 +45,7 @@ export default {
           subcaption: this.computedSubcaption,
           numberprefix: "#",
           showlabels: "1",
+          exportEnabled: this.computedcanExport,
           theme: "fusion",
           entitytooltext:
             "<div style='font-size:14px; text-align:center; padding: 2px 4px 2px 4px; color:black;'>$lName</div><div style='font-size:12px; color:black;'>Total Audience: <b>$value</b></div>",
@@ -163,6 +164,17 @@ export default {
       } 
       else {
         return [];
+      }
+    },
+    computedcanExport(){
+      if (this.mode == 0 && this._type == 0) {
+        return "0";
+      }
+      if (this.mode == 0 && this._type == 1) {
+        return "0";
+      }
+      if (this.mode == 1) {
+        return "1";
       }
     },
     computedRes() {

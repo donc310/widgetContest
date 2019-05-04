@@ -88,8 +88,8 @@
                           <span></span>
                         </b-form-checkbox>
                       </b-form>
-                      <br>
                       <div v-if="checked.states">
+                        <br>
                         <StateInput
                           v-if="!isLoading"
                           :_autocompleteItems="computedInitialstates"
@@ -110,6 +110,7 @@
                               v-b-tooltip.hover
                               :title="computedLocationToolTip"
                               v-model="location"
+                              required
                             ></b-form-input>
                             <b-form-datalist
                               id="LocationOptions"
@@ -120,16 +121,14 @@
                       </div>
                       <br>
                       <b-form inline>
-                        <label
-                          class="mr-sm-2"
-                          for="inline-form-custom-select-pref"
-                        >Enable location filters</label>
                         <b-form-checkbox
                           v-model="enablefilter"
                           name="nation-wide-check-button"
                           switch
                           inline
-                        >
+                          :disabled="canenablefilter"
+                        >Enable location filters
+                        <span></span>
                         </b-form-checkbox>
                       </b-form>
                       <hr>
@@ -161,7 +160,7 @@
                               v-b-tooltip.hover
                               :title="computedLocationCatToolTip"
                               v-model="LocationCat"
-                              required
+                              
                             ></b-form-input>
                             <b-form-datalist
                               id="locationcats"
@@ -189,7 +188,7 @@
                               </div>
                             </b-input-group-text>
                             <b-form-input
-                              list="Level2options"
+                              list="locationsubcats"
                               id="input-with-list-two"
                               class="border-top-0 border-right-0 border-left-0 border-bottom-10"
                               v-b-tooltip.hover
@@ -250,6 +249,14 @@
                     ></AdvancedSearch>
                   </div>
                 </b-tab>
+
+                <b-tab ref="Wsummarytab" title="summary">
+                  <hr>
+                  <Summary
+                  :_summary="computedResponse"
+                  ></Summary>
+                  <hr>
+                </b-tab>
               </b-tabs>
             </b-card>
             <br>
@@ -275,6 +282,8 @@ import { ApiFactory } from "./../api/ApiFactory";
 import StateInput from "./input/stateInput.vue";
 import Chart from "./map/chart.vue";
 import AdvancedSearch from "./views/Advancedquery.vue";
+import Summary from "./views/summary.vue";
+
 import debounce from "lodash/debounce";
 import clone from "lodash/clone";
 
@@ -285,7 +294,8 @@ export default {
   components: {
     StateInput,
     Chart,
-    AdvancedSearch
+    AdvancedSearch,
+    Summary
   },
   props: {},
   data() {
@@ -343,11 +353,11 @@ export default {
         return;
       }
       this.isprocessingForm = true;
-      this.form.Level1 = this.audience1;
-      this.form.Level2 = this.audience2;
+      this.form.Level1 = this.LocationCat;
+      this.form.Level2 = this.LocationSubCat;
       this.form.location = this.location;
       this.form.frequency = this.frequencyselected;
-      this.form.audience = this.checked.states ? "states" : "nationwide";
+      this.form.audience = this.checked.states ? "States" : "Nationwide";
       this.form.enableadvance = this.checked.advancedQuery;
       this.advancedFilters = clone(this.form);
       var lastquery = this.query.push(this.form) - 1;
@@ -376,10 +386,20 @@ export default {
       evt.preventDefault();
       this.form.name = "";
       this.show = false;
-      this.audience1 = "";
-      this.audience2 = "";
+      this.LocationCat = "";
+      this.LocationSubCat = "";
+      this.LocationSubCatOptions = [];
+      this.LocationSubCatOptions = [];
+      this.location = "";
+      this.frequencyselected =[];
+      this.checked.states = false;
       this.checked.nationwide = true;
+      this.form.stateTags = [];
       this.response = [];
+      this.advancedFilters={
+        stateTags:this.form.stateTags,
+        frequency:this.frequencyselected
+      };
       this.$nextTick(() => {
         this.show = true;
       });
@@ -519,7 +539,23 @@ export default {
         this.mode = 0;
         this.form.name = "";
         this.checked.nationwide = true;
+        this.checked.states = false;
+        this.LocationCat = "";
+        this.LocationSubCat = "";
+        this.form.stateTags = [];
+        this.frequencyselected =[];
+        this.LocationCatOptions = [];
+        this.LocationSubCatOptions = [];
+        this.advancedFilters = {
+          stateTags:this.form.stateTags,
+          frequency:this.frequencyselected
+
+
+        };
         this.response = [];
+        this.$nextTick(() => {
+          this.ResetWidget = false;
+        });
       }
     }
   },
@@ -573,6 +609,9 @@ export default {
       return this.LocationOptions.map(x => {
         return x.LOCATION;
       }, 0);
+    },
+    canenablefilter(){
+      return this.location === ""? true:false;   
     },
     computedCanLoadLocationssub() {
       return this.computedCanLoadCat;
