@@ -7,10 +7,10 @@
   <body>
     ...
 
-    <widget>
-    <widget/>
+    <widget-app>
+    <widget-app/>
 
-    <script src="../dist/build.js"></script>
+    <script src="../dist/widget.js"></script>
   </body>
 </html>
 ```

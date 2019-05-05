@@ -230,7 +230,7 @@
                         </b-form-group>
                       </div>
                       </div>
-                      <br>
+                       <br>
                       <b-button type="submit" variant="primary">Analyze audience</b-button>
                       <b-button type="reset" variant="danger">Reset</b-button>
                     </b-form>
@@ -253,6 +253,7 @@
                 <b-tab ref="Wsummarytab" title="summary">
                   <hr>
                   <Summary
+                  :options="advancedFilters"
                   :_summary="computedResponse"
                   ></Summary>
                   <hr>
@@ -390,6 +391,7 @@ export default {
       this.LocationSubCat = "";
       this.LocationSubCatOptions = [];
       this.LocationSubCatOptions = [];
+      this.enablefilter = false;
       this.location = "";
       this.frequencyselected =[];
       this.checked.states = false;
@@ -398,7 +400,10 @@ export default {
       this.response = [];
       this.advancedFilters={
         stateTags:this.form.stateTags,
-        frequency:this.frequencyselected
+        frequency:this.frequencyselected,
+        Level2: this.LocationSubCat,
+        Level1: this.LocationCat,
+        location: this.location
       };
       this.$nextTick(() => {
         this.show = true;
@@ -540,6 +545,8 @@ export default {
         this.form.name = "";
         this.checked.nationwide = true;
         this.checked.states = false;
+        this.enablefilter = false;
+        this.location = "";
         this.LocationCat = "";
         this.LocationSubCat = "";
         this.form.stateTags = [];
@@ -548,9 +555,10 @@ export default {
         this.LocationSubCatOptions = [];
         this.advancedFilters = {
           stateTags:this.form.stateTags,
-          frequency:this.frequencyselected
-
-
+          frequency:this.frequencyselected,
+          Level2: this.LocationSubCat,
+          Level1: this.LocationCat,
+          location: this.location
         };
         this.response = [];
         this.$nextTick(() => {

@@ -167,6 +167,8 @@ export default {
         return;
       }
       this.results = newValue;
+      this.states = "";
+      this.frequencies = "";
       if(this.results ==={}){return;}
       if (this.results.stateTags.length != 0) {
         this.states = "";
